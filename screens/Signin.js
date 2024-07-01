@@ -5,6 +5,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    Switch,
     Image,
     StyleSheet,
     KeyboardAvoidingView,
@@ -12,51 +13,40 @@ import {
     ActivityIndicator
 } from 'react-native';
 import { auth } from '../config/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Feather } from '@expo/vector-icons';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 
-const SignUpScreen = () => {
+const LoginScreen = () => {
     const navigation = useNavigation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
-    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
+    const handleLogin = async () => {
+        try {
+            setLoading(true); // Set loading to true when logging in
+            if (!email || !password) {
+                setError('Please enter both email and password');
+                setLoading(false); // Reset loading state
+                return;
+            }
+
+            // Implement Firebase login logic
+            await signInWithEmailAndPassword(auth, email, password);
+            // Redirect to Home screen upon successful login
+            navigation.navigate('SpeedTest1');
+        } catch (error) {
+            console.error('Error logging in:', error);
+            setError('Invalid email or password');
+        } finally {
+            setLoading(false); // Reset loading state after login attempt
+        }
+    };
 
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
-    };
-
-    const toggleConfirmPasswordVisibility = () => {
-        setConfirmPasswordVisible(!confirmPasswordVisible);
-    };
-
-    const handleSignUp = async () => {
-        try {
-            setLoading(true); // Set loading to true when signing up
-            if (!email || !password || !confirmPassword) {
-                setError('Please enter email, password, and confirm password');
-                setLoading(false); // Reset loading state
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                setError('Passwords do not match');
-                setLoading(false); // Reset loading state
-                return;
-            }
-
-            // Implement Firebase sign up logic
-            await createUserWithEmailAndPassword(auth, email, password);
-            navigation.navigate('Signin'); // Redirect to SignIn screen upon successful sign up
-        } catch (error) {
-            console.error('Error signing up:', error);
-            setError('Error signing up. Please try again later.');
-        } finally {
-            setLoading(false); // Reset loading state after sign up attempt
-        }
     };
 
     return (
@@ -69,7 +59,7 @@ const SignUpScreen = () => {
                     Welcome Yo
                 </Text>
                 <Text style={styles.welcometext}>
-                    Sign Up
+                    Sign In
                 </Text>
             </View>
             <View style={styles.logo}>
@@ -77,7 +67,7 @@ const SignUpScreen = () => {
             </View>
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { marginBottom: 10 }]}
                     placeholder="Email"
                     placeholderTextColor="#888"
                     value={email}
@@ -108,45 +98,23 @@ const SignUpScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Confirm Password"
-                        placeholderTextColor="#888"
-                        secureTextEntry={!confirmPasswordVisible}
-                        value={confirmPassword}
-                        onChangeText={(text) => setConfirmPassword(text)}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                    <TouchableOpacity
-                        style={styles.togglePasswordVisibility}
-                        onPress={toggleConfirmPasswordVisibility}
-                    >
-                        <Feather
-                            name={confirmPasswordVisible ? 'eye-off' : 'eye'}
-                            size={24}
-                            color="#888"
-                        />
-                    </TouchableOpacity>
-                </View>
             </View>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity
-                style={[styles.button, {display: confirmPassword === '' ? 'none' : 'flex'}]}
-                onPress={handleSignUp}
+                style={styles.button}
+                onPress={handleLogin}
                 disabled={loading}
             >
                 {loading ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={styles.buttonText}>Sign Up</Text>
+                    <Text style={styles.buttonText}>Sign In</Text>
                 )}
             </TouchableOpacity>
             <Text style={styles.signUpText}>
-                Already have an account?{' '}
-                <TouchableOpacity onPress={() => navigation.navigate('Signin')}>
-                    <Text style={styles.signUpLink}>Sign In</Text>
+                Need an account?{' '}
+                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                    <Text style={styles.signUpLink}>Sign Up</Text>
                 </TouchableOpacity>
             </Text>
         </KeyboardAvoidingView>
@@ -165,7 +133,6 @@ const styles = StyleSheet.create({
         marginTop: 40,
     },
     inputContainer: {
-        flex: 1,
         marginBottom: 20,
     },
     input: {
@@ -174,7 +141,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#1a1f36',
         borderRadius: 10,
         padding: 10,
-        marginBottom: 20,
         color: '#fff',
     },
     passwordContainer: {
@@ -183,13 +149,12 @@ const styles = StyleSheet.create({
     togglePasswordVisibility: {
         position: 'absolute',
         top: 12,
-        right: 10,
+        right: 12,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        width: '100%',
         marginBottom: 20,
     },
     rememberMe: {
@@ -205,14 +170,14 @@ const styles = StyleSheet.create({
     },
     button: {
         height: 50,
-        backgroundColor: '#fff',
+        backgroundColor: '#6a1b9a',
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
     },
     buttonText: {
-        color: '#6a1b9a',
+        color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },
@@ -240,4 +205,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SignUpScreen;
+export default LoginScreen;
